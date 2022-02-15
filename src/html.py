@@ -12,119 +12,125 @@ Iver Oknes (iver@oknes.no)
 """
 import pandas as pd
 
-opening_html = """<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RF Meny</title>
-    <style>
-        html {
-            font-family: arial, sans-serif;
-        }
+def make_html(menu: pd.DataFrame) -> str:
+    opening_html = """<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>RF Meny</title>
+        <style>
+            html {
+                font-family: arial, sans-serif;
+            }
 
-        .prod {
-            width: 40%;
-        }
+            .prod {
+                width: 40%;
+            }
 
-        .size {
-            width: 12%;
-        }
+            .size {
+                width: 12%;
+            }
 
-        .abv {
-            width: 12%;
-        }
+            .abv {
+                width: 12%;
+            }
 
-        .orig {
-            width: 25%;
-        }
-        
-        .price {
-            width: 11%;
-        }
+            .orig {
+                width: 25%;
+            }
+            
+            .price {
+                width: 11%;
+            }
 
-        /*h1 {
-            text-align: center;
-        }*/
+            /*h1 {
+                text-align: center;
+            }*/
 
-        table {
-          border-collapse: collapse;
-          width: 100%;
-        }  
-        
-        td, th {
-          border: 1px solid #dddddd;  
-          text-align: left;
-          padding: 8px;
-        }  
-        
-        tr:nth-child(even) {
-          background-color: #dddddd;  
-        }  
-    </style>
-</head>
-<body>
-"""
+            table {
+            border-collapse: collapse;
+            width: 100%;
+            }  
+            
+            td, th {
+            border: 1px solid #dddddd;  
+            text-align: left;
+            padding: 8px;
+            }  
+            
+            tr:nth-child(even) {
+            background-color: #dddddd;  
+            }  
+        </style>
+    </head>
+    <body>
+    """
 
-result = [opening_html]
+    result = [opening_html]
 
-try:
-    menu = pd.read_excel("Meny (RF).xlsx", header=0)
-except FileNotFoundError:
-    print("File 'Meny (RF).xlsx' missing! Can't generate menu without this file!")
-    exit()
+    
 
-in_stock = menu.loc[pd.notna(menu["Til salg"])]
-name = "Vare"
-category = "Kategori"
-abv = "ABV"
-volume = "Størrelse"
-country = "Land"
-price = "Eksternpris"
+    in_stock = menu.loc[pd.notna(menu["Til salg"])]
+    name = "Vare"
+    category = "Kategori"
+    abv = "ABV"
+    volume = "Størrelse"
+    country = "Land"
+    price = "Eksternpris"
 
-categories_list = list(set(in_stock[category]))
+    categories_list = list(set(in_stock[category]))
 
-predefined_start = ["Fat", "Lager", "Pale Ale", "IPA", "Hveteøl"]
+    predefined_start = ["Fat", "Lager", "Pale Ale", "IPA", "Hveteøl"]
 
-for idx, cat in enumerate(predefined_start):
+    for idx, cat in enumerate(predefined_start):
+        try:
+            categories_list.insert(idx, categories_list.pop(categories_list.index(cat)))
+        except ValueError:
+            print(f"Ingen produkter av typen {cat} på menyen!")
+
+    predefined_end = ["Hvitvin", "Rødvin", "Cava", "Musserende vin", "Portvin", "Shot", "Alkoholfritt øl", "Mineralvann"]
+
+
+    for cat in predefined_end:
+        try:
+            categories_list.append(categories_list.pop(categories_list.index(cat)))
+        except ValueError:
+            print(f"Ingen produkter av typen {cat} på menyen!")
+
+    for cat in categories_list:
+        result.append(f"<h1>{cat}</h1>\n")
+        cat_prods = in_stock.loc[(in_stock[category] == cat)]
+
+        result.append("<table>\n<tr><th>Produkt</th><th>Størrelse</th><th>ABV</th><th>Opprinnelse</th><th>Pris</th></tr>\n")
+
+        for i in cat_prods.index:
+            prod = cat_prods.loc[i]
+
+            p_name = prod[name]
+            p_abv = f"{prod[abv] * 100:.1f}%" if pd.notna(prod[abv]) else ""
+            p_volume = f"{prod[volume] * 100:.0f}cl" if pd.notna(prod[volume]) else ""
+            p_price = f"kr {round(prod[price])},-" if pd.notna(prod[price]) else ""
+            p_country = prod[country] if pd.notna(prod[country]) else ""
+
+            result.append(f"<tr><td class='prod'>{p_name}</td><td class='size'>{p_volume}</td><td class='abv'>{p_abv}</td><td class='orig'>{p_country}</td><td class='price'>{p_price}</td></tr>\n")
+
+        result.append("</table>\n")
+
+    result.append("""</body>
+    </html>
+    """)
+
+    return str().join(result)
+
+
+if __name__ == '__main__':
     try:
-        categories_list.insert(idx, categories_list.pop(categories_list.index(cat)))
-    except ValueError:
-        print(f"Ingen produkter av typen {cat} på menyen!")
-
-predefined_end = ["Hvitvin", "Rødvin", "Cava", "Musserende vin", "Portvin", "Shot", "Alkoholfritt øl", "Mineralvann"]
-
-
-for cat in predefined_end:
-    try:
-        categories_list.append(categories_list.pop(categories_list.index(cat)))
-    except ValueError:
-        print(f"Ingen produkter av typen {cat} på menyen!")
-
-for cat in categories_list:
-    result.append(f"<h1>{cat}</h1>\n")
-    cat_prods = in_stock.loc[(in_stock[category] == cat)]
-
-    result.append("<table>\n<tr><th>Produkt</th><th>Størrelse</th><th>ABV</th><th>Opprinnelse</th><th>Pris</th></tr>\n")
-
-    for i in cat_prods.index:
-        prod = cat_prods.loc[i]
-
-        p_name = prod[name]
-        p_abv = f"{prod[abv] * 100:.1f}%" if pd.notna(prod[abv]) else ""
-        p_volume = f"{prod[volume] * 100:.0f}cl" if pd.notna(prod[volume]) else ""
-        p_price = f"kr {round(prod[price])},-" if pd.notna(prod[price]) else ""
-        p_country = prod[country] if pd.notna(prod[country]) else ""
-
-        result.append(f"<tr><td class='prod'>{p_name}</td><td class='size'>{p_volume}</td><td class='abv'>{p_abv}</td><td class='orig'>{p_country}</td><td class='price'>{p_price}</td></tr>\n")
-
-    result.append("</table>\n")
-
-result.append("""</body>
-</html>
-""")
-
-with open("meny.html", 'w') as outfile:
-    outfile.write(str().join(result))
-print("Meny skrevet til meny.html")
+        menu = pd.read_excel("Meny (RF).xlsx", header=0)
+    except FileNotFoundError:
+        print("File 'Meny (RF).xlsx' missing! Can't generate menu without this file!")
+        exit()
+    with open("meny.html", 'w') as outfile:
+        outfile.write(make_html(menu))
+    print("Meny skrevet til meny.html")

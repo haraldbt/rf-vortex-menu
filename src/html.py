@@ -12,7 +12,7 @@ Iver Oknes (iver@oknes.no)
 """
 import pandas as pd
 
-html = """<!DOCTYPE html>
+opening_html = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -67,6 +67,8 @@ html = """<!DOCTYPE html>
 <body>
 """
 
+result = [opening_html]
+
 try:
     menu = pd.read_excel("Meny (RF).xlsx", header=0)
 except FileNotFoundError:
@@ -101,10 +103,10 @@ for cat in predefined_end:
         print(f"Ingen produkter av typen {cat} på menyen!")
 
 for cat in categories_list:
-    html += f"<h1>{cat}</h1>\n"
+    result.append(f"<h1>{cat}</h1>\n")
     cat_prods = in_stock.loc[(in_stock[category] == cat)]
 
-    html += "<table>\n<tr><th>Produkt</th><th>Størrelse</th><th>ABV</th><th>Opprinnelse</th><th>Pris</th></tr>\n"
+    result.append("<table>\n<tr><th>Produkt</th><th>Størrelse</th><th>ABV</th><th>Opprinnelse</th><th>Pris</th></tr>\n")
 
     for i in cat_prods.index:
         prod = cat_prods.loc[i]
@@ -115,14 +117,14 @@ for cat in categories_list:
         p_price = f"kr {round(prod[price])},-" if pd.notna(prod[price]) else ""
         p_country = prod[country] if pd.notna(prod[country]) else ""
 
-        html += f"<tr><td class='prod'>{p_name}</td><td class='size'>{p_volume}</td><td class='abv'>{p_abv}</td><td class='orig'>{p_country}</td><td class='price'>{p_price}</td></tr>\n"
+        result.append(f"<tr><td class='prod'>{p_name}</td><td class='size'>{p_volume}</td><td class='abv'>{p_abv}</td><td class='orig'>{p_country}</td><td class='price'>{p_price}</td></tr>\n")
 
-    html += "</table>\n"
+    result.append("</table>\n")
 
-html += """</body>
+result.append("""</body>
 </html>
-"""
+""")
 
 with open("meny.html", 'w') as outfile:
-    outfile.write(html)
+    outfile.write(str().join(result))
 print("Meny skrevet til meny.html")

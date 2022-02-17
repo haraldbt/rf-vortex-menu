@@ -1,14 +1,5 @@
 """
-This is a script for generating a menu HTML-file for RF (Realistforeningen). To run the script the 
-file "Meny (RF).xlsx" must be present in the same directory as the script.
-
-The output is the file "meny.html". This file can be converted by opening it in a web-browser and 
-printing to PDF, or using a tool like Pandoc. Some categories will appear in a pre-defined order,
-with the rest appearing in alphabetical order between these. If any of the pre-defiend categories 
-have no entries, a warning will be printed to the terminal.
-
-Maintainer:
-Iver Oknes (iver@oknes.no)
+Originally made by github.com/iOknes
 """
 import pandas as pd
 
@@ -123,14 +114,3 @@ def make_html(menu: pd.DataFrame) -> str:
     """)
 
     return str().join(result)
-
-
-if __name__ == '__main__':
-    try:
-        menu = pd.read_excel("Meny (RF).xlsx", header=0)
-    except FileNotFoundError:
-        print("File 'Meny (RF).xlsx' missing! Can't generate menu without this file!")
-        exit()
-    with open("meny.html", 'w') as outfile:
-        outfile.write(make_html(menu))
-    print("Meny skrevet til meny.html")

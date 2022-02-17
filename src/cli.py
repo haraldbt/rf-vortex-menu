@@ -1,29 +1,23 @@
-from collections.abc import Sequence
 from getpass import getpass
-from upload import update_menu
+from html import make_html
+from upload import get_client, update_page
+import pandas as pd
 
 
-def cli(args: Sequence[str]) -> None:
+def cli(username: str, file_name: str) -> None:
     """
-    Prompts the user for email address if not supplied,
-    takes path argument if present,
-    prompts the user for password.
-    Passes login, password and optional path to update_menu.
+    username: str, full UiO username, including @uio.no
+    file_name: str, name of file to parse as menu
+
+    Prompts the user for their password, generates html page from file
     """
-    if len(args) > 0:
-        login = args[0]
-    else:
-        login = input('UiO email address: ')
-    
-    if len(args) > 1:
-        path = args[1]
-    else:
-        path = None
+    password = getpass(f'Password for {username}: ')
+    client = get_client('https://foreninger-dav.uio.no/rf/', username, password)
+    data = make_html(pd.read_excel(file_name, header=0))
 
-    password = getpass()
+    update_page(client, 'servering/bar', data)
 
-    update_menu(login, password, path)
 
 if __name__ == '__main__':
     import sys
-    cli(sys.argv[1:])
+    cli(*sys.argv[1:])

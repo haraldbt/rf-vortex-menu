@@ -2,21 +2,20 @@ from typing import Optional
 from webdav3.client import Client
 
 
-def update_menu(login: str, password: str, path: Optional[str] = None) -> None:
+def get_client(hostname: str, login: str, password: str):
     """
+    hostname: str
     login: str, UiO email address
     password: str, password for the UiO account
-    path: optional str, path to file to be uploaded
     """
     options = {
-        'webdav_hostname': 'https://foreninger-dav.uio.no/rf/',
+        'webdav_hostname': hostname,
         'webdav_login': login,
         'webdav_password': password
     }
 
-    client = Client(options)
+    return Client(options)
 
-    if path is None:
-        path = 'index.html'
 
-    client.upload_sync(remote_path='meny/index.html', local_path=path)
+def update_page(client: Client, path: str, data: str) -> None:
+    client.upload_to(data, remote_path=f'{path}/index.html')

@@ -18,4 +18,5 @@ def get_client(hostname: str, login: str, password: str):
 
 
 def update_page(client: Client, path: str, data: str) -> None:
-    client.upload_to(data, remote_path=f'{path}/index.html')
+    # Special characters break if string data isn't encoded
+    client.upload_to(data.encode(), remote_path=f'{path}/index.html')
